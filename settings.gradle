@@ -8,4 +8,5 @@ pluginManagement {
 
 rootProject.name = "modern-mixins"
 
+include("forge")
 include("rift")
