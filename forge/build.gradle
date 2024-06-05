@@ -6,7 +6,8 @@ unimined.minecraft {
 
 jar {
     manifest.attributes(
-            "FMLModType": "LIBRARY"
+            //"FMLModType": "LIBRARY",
+            "MixinConfigs": "mixins.modernmixins.json"
     )
 }
 

@@ -34,6 +34,11 @@ import org.spongepowered.asm.service.IClassProvider;
  */
 class ModLauncherClassProvider implements IClassProvider {
 
+    /**
+     * Here be dragons
+     */
+    private final Internals internals = Internals.getInstance();
+
     ModLauncherClassProvider() {
     }
 
@@ -52,7 +57,11 @@ class ModLauncherClassProvider implements IClassProvider {
      */
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        return Class.forName(name, true, ModLauncherClassProvider.class.getClassLoader());
+        try {
+            return Class.forName(name, true, internals.getTransformingClassLoader());
+        } catch (Throwable ex) {
+            return Class.forName(name, true, ModLauncherClassProvider.class.getClassLoader());
+        }
     }
 
     /* (non-Javadoc)
@@ -61,7 +70,11 @@ class ModLauncherClassProvider implements IClassProvider {
      */
     @Override
     public Class<?> findClass(String name, boolean initialize) throws ClassNotFoundException {
-        return Class.forName(name, initialize, ModLauncherClassProvider.class.getClassLoader());
+        try {
+            return Class.forName(name, initialize, internals.getTransformingClassLoader());
+        } catch (Throwable ex) {
+            return Class.forName(name, initialize, ModLauncherClassProvider.class.getClassLoader());
+        }
     }
 
     /* (non-Javadoc)
@@ -70,6 +83,10 @@ class ModLauncherClassProvider implements IClassProvider {
      */
     @Override
     public Class<?> findAgentClass(String name, boolean initialize) throws ClassNotFoundException {
-        return Class.forName(name, initialize, ModLauncherClassProvider.class.getClassLoader());
+        try {
+            return Class.forName(name, initialize, internals.getTransformingClassLoader());
+        } catch (Throwable ex) {
+            return Class.forName(name, initialize, ModLauncherClassProvider.class.getClassLoader());
+        }
     }
 }

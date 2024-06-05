@@ -28,8 +28,10 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 
+import cpw.mods.modlauncher.TransformingClassLoader;
 import org.spongepowered.asm.launch.IClassProcessor;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleModLauncher;
+import org.spongepowered.asm.launch.platform.container.IContainerHandle;
 import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
@@ -51,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 public class MixinServiceModLauncher extends MixinServiceAbstract {
     private static final String CONTAINER_PACKAGE = MixinServiceAbstract.LAUNCH_PACKAGE + "platform.container.";
     private static final String MODLAUNCHER_4_ROOT_CONTAINER_CLASS = MixinServiceModLauncher.CONTAINER_PACKAGE + "ContainerHandleModLauncher";
+    private static final String MODLAUNCHER_9_ROOT_CONTAINER_CLASS = MixinServiceModLauncher.CONTAINER_PACKAGE + "ContainerHandleModLauncherEx";
 
     /**
      * Class provider, either uses hacky internals or provided service
@@ -71,11 +74,6 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
      * Class tracker, tracks class loads and registered invalid classes
      */
     private ModLauncherClassTracker classTracker;
-
-    /**
-     * Audit trail adapter
-     */
-    private ModLauncherAuditTrail auditTrail;
 
     /**
      * Environment phase consumer, TEMP
@@ -104,14 +102,15 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
     /**
      * Begin init
      *
-     * @param bytecodeProvider bytecode provider
+     * @param startupListener Lifecyle listener
      */
-    public void onInit(IClassBytecodeProvider bytecodeProvider) {
+    public void onInit(Runnable startupListener) {
         if (this.initialised) {
             throw new IllegalStateException("Already initialised");
         }
         this.initialised = true;
-        this.bytecodeProvider = bytecodeProvider;
+        Internals.getInstance().registerStartupListener(startupListener);
+        Internals.getInstance().registerStartupListener(MixinServiceModLauncher.this::onStartup);
     }
 
     private void createRootContainer() {
@@ -194,7 +193,7 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
     @Override
     public IClassBytecodeProvider getBytecodeProvider() {
         if (this.bytecodeProvider == null) {
-            throw new IllegalStateException("Service initialisation incomplete");
+            this.bytecodeProvider = new ModLauncherBytecodeProvider();
         }
         return this.bytecodeProvider;
     }
@@ -223,10 +222,7 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
      */
     @Override
     public IMixinAuditTrail getAuditTrail() {
-        if (this.auditTrail == null) {
-            this.auditTrail = new ModLauncherAuditTrail();
-        }
-        return this.auditTrail;
+        return null;
     }
 
     /**
@@ -263,6 +259,16 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
      */
     @Override
     public InputStream getResourceAsStream(String name) {
+        TransformingClassLoader tcl = Internals.getInstance().getTransformingClassLoader();
+        if (tcl != null) {
+            InputStream is = tcl.getResourceAsStream(name);
+            
+            if (is != null) {
+                return is;
+            }
+        }
+
+        // Probably not what we want :/
         return MixinServiceModLauncher.class.getClassLoader().getResourceAsStream(name);
     }
 
