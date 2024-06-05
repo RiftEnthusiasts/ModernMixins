@@ -19,16 +19,27 @@ public class ModernMixinsMod implements InitializationListener {
 
     @Override
     public void onInitialization() {
-        Mixins.addConfiguration("mixins.modernmixins.json");
+        try {
+            Mixins.addConfiguration("mixins.modernmixins.json");
+        } catch (Throwable th) {
+            LOGGER.warn("Failed to add mixinextras!", th);
+        }
     }
 
     static {
-        Launch.classLoader.addClassLoaderExclusion("org.objectweb.asm.");
-        Launch.classLoader.addClassLoaderExclusion("org.spongepowered.asm.");
-        Launch.classLoader.addClassLoaderExclusion("org.spongepowered.tools.");
-        Launch.classLoader.addClassLoaderExclusion("org.spongepowered.include.");
+        URLClassLoader classLoader;
+        try {
+            Class.forName("net.minecraft.launchwrapper.Launch");
 
-        URLClassLoader classLoader = (URLClassLoader) LaunchClassLoader.class.getClassLoader();
+            Launch.classLoader.addClassLoaderExclusion("org.objectweb.asm.");
+            Launch.classLoader.addClassLoaderExclusion("org.spongepowered.asm.");
+            Launch.classLoader.addClassLoaderExclusion("org.spongepowered.tools.");
+            Launch.classLoader.addClassLoaderExclusion("org.spongepowered.include.");
+
+            classLoader = (URLClassLoader) LaunchClassLoader.class.getClassLoader();
+        } catch (Throwable th) { // Fabricloader
+            classLoader = (URLClassLoader) ModernMixinsMod.class.getClassLoader().getParent();
+        }
 
         Object ucp;
         try {
