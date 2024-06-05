@@ -13,5 +13,5 @@
     }
   ],
   "url": "https://github.com/RiftEnthusiasts/ModernMixins",
-  "description": "Modern mixin on legacy loaders."
+  "description": "Modern mixin & mixinextras loader for abandoned modloaders"
 }
