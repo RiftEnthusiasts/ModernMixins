@@ -1,0 +1,6 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "org.redlance.dima_dencep.mods.modernmixins.extras.ModernMixinsPlugin"
+}

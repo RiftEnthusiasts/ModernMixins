@@ -1,0 +1,17 @@
+{
+  "id": "modernmixins",
+  "name": "Modern Mixins",
+  "version": "${project.version}",
+  "authors": [
+    "dima_dencep",
+    "shizotoaster"
+  ],
+  "listeners": [
+    {
+      "class": "org.redlance.dima_dencep.mods.modernmixins.ModernMixinsMod",
+      "priority": -10000
+    }
+  ],
+  "url": "https://github.com/RiftEnthusiasts/ModernMixins",
+  "description": "Modern mixin on legacy loaders."
+}

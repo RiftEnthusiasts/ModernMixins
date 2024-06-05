@@ -1,0 +1,78 @@
+plugins {
+    id "xyz.wagyourtail.unimined" version "1.2.7-SNAPSHOT" apply false
+    id "io.github.goooler.shadow" version "8.1.7" apply false
+}
+
+subprojects {
+    apply plugin: "xyz.wagyourtail.unimined"
+    apply plugin: "io.github.goooler.shadow"
+	
+    unimined.minecraft(sourceSets.main, true) {
+        version rootProject.minecraft_version
+
+        mappings {
+            searge()
+            mcp("stable", "47-1.13.2")
+        }
+
+        defaultRemapJar = false
+    }
+
+    configurations {
+        fabricMixin {
+            exclude(group: "com.google.guava")
+            exclude(group: "com.google.code.gson")
+            // transitive = false
+        }
+        implementation.extendsFrom fabricMixin
+    }
+
+    dependencies {
+        fabricMixin "net.fabricmc:sponge-mixin:${rootProject.mixin_version}"
+        fabricMixin "io.github.llamalad7:mixinextras-common:${rootProject.extras_version}"
+    }
+
+    processResources {
+        // inputs.property "project", project
+
+        filesMatching(["META-INF/mods.toml", "riftmod.json"]) {
+            expand "project": project
+        }
+    }
+
+    shadowJar {
+        configurations = [project.configurations.fabricMixin]
+
+        mergeServiceFiles()
+    }
+
+    build.finalizedBy shadowJar
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "maven-publish"
+
+    archivesBaseName = rootProject.archives_base_name
+    version = "${rootProject.mod_version}+mc${rootProject.minecraft_version}-${project.name}"
+    group = rootProject.maven_group
+
+    repositories {
+        maven { url "https://maven.minecraftforge.net" }
+        maven { url "https://maven.fabricmc.net" }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = "UTF-8"
+        options.release.set 8
+    }
+
+    java {
+        withSourcesJar()
+    }
+
+    publishing {
+        repositories {
+        }
+    }
+}
