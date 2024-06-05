@@ -262,7 +262,7 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
         TransformingClassLoader tcl = Internals.getInstance().getTransformingClassLoader();
         if (tcl != null) {
             InputStream is = tcl.getResourceAsStream(name);
-            
+
             if (is != null) {
                 return is;
             }
