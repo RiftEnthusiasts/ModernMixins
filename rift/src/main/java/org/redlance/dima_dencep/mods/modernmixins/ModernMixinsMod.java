@@ -10,10 +10,10 @@ import org.spongepowered.asm.mixin.Mixins;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class ModernMixinsMod implements InitializationListener {
     public static final Logger LOGGER = LogManager.getLogger("modern-mixins");
 
@@ -50,7 +50,7 @@ public class ModernMixinsMod implements InitializationListener {
     }
 
     public static void fullyRemove(Object ucp, URL lib) {
-        LOGGER.info("Removing {}...", lib);
+        LOGGER.info("Removing {} from classpath...", lib);
 
         try {
             ClassLoaderUtils.removeUrlFromClassPath(ucp, lib);
@@ -58,21 +58,13 @@ public class ModernMixinsMod implements InitializationListener {
                     lib.toString().replaceFirst("file:/", "file:///")
             );
         } catch (Throwable e) {
-            LOGGER.error("Failed to remove {}!", lib, e);
+            LOGGER.error("Failed to remove {} from classpath!", lib, e);
         }
     }
 
-    public static List<URL> findConflictLibs(ClassLoader loader) {
-        if (loader instanceof URLClassLoader) {
-            URLClassLoader urlClassLoader = (URLClassLoader) loader;
-
-            return Arrays.stream(urlClassLoader.getURLs())
-                    .filter(url -> url.getFile().contains("mixin-0.7.11") || (url.getFile().contains("asm-") && url.getFile().endsWith("-6.2.jar")))
-                    .collect(Collectors.toList());
-        } else {
-            LOGGER.error("ClassLoader is not URL!");
-
-            return Collections.emptyList();
-        }
+    public static List<URL> findConflictLibs(URLClassLoader loader) {
+        return Arrays.stream(loader.getURLs())
+                .filter(url -> url.getFile().contains("mixin-0.7.11") || (url.getFile().contains("asm-") && url.getFile().endsWith("-6.2.jar")))
+                .collect(Collectors.toList());
     }
 }
