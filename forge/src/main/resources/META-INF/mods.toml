@@ -1,0 +1,14 @@
+modLoader = "javafml"
+license = "MIT"
+loaderVersion = "[25,)"
+issueTrackerURL = "https://github.com/RiftEnthusiasts/ModernMixins/issues"
+logoFile = "modernmixins_logo.png"
+
+[[mods]]
+modId = "modernmixins"
+version = "${project.version}"
+displayName = "Modern Mixins"
+description = "Modern mixin & mixinextras loader for abandoned modloaders"
+authors = "dima_dencep, shizotoaster"
+displayURL = "https://github.com/RiftEnthusiasts/ModernMixins"
+updateJSONURL = "https://api.modrinth.com/updates/modernmixins/forge_updates.json"
