@@ -27,6 +27,9 @@ package org.spongepowered.asm.service.modlauncher;
 import java.net.URL;
 
 import cpw.mods.gross.Java9ClassLoaderUtil;
+import cpw.mods.modlauncher.TransformingClassLoader;
+import org.redlance.dima_dencep.mods.modernmixins.ModernMixinsService;
+import org.redlance.dima_dencep.mods.modernmixins.utils.MixinsClassLoader;
 import org.spongepowered.asm.service.IClassProvider;
 
 /**
@@ -37,7 +40,7 @@ class ModLauncherClassProvider implements IClassProvider {
     /**
      * Here be dragons
      */
-    private final Internals internals = Internals.getInstance();
+    private static final Internals internals = Internals.getInstance();
 
     ModLauncherClassProvider() {
     }
@@ -57,11 +60,17 @@ class ModLauncherClassProvider implements IClassProvider {
      */
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        try {
-            return Class.forName(name, true, internals.getTransformingClassLoader());
-        } catch (Throwable ex) {
-            return Class.forName(name, true, ModLauncherClassProvider.class.getClassLoader());
+        return findClass(name, true);
+    }
+
+    public static ClassLoader getUsableClassLoader() {
+        TransformingClassLoader transformingClassLoader = internals.getTransformingClassLoader();
+        if (transformingClassLoader != null) {
+            MixinsClassLoader.hackClassLoaders(transformingClassLoader);
+            return transformingClassLoader;
         }
+
+        return ModernMixinsService.CLASS_LOADER;
     }
 
     /* (non-Javadoc)
@@ -70,11 +79,7 @@ class ModLauncherClassProvider implements IClassProvider {
      */
     @Override
     public Class<?> findClass(String name, boolean initialize) throws ClassNotFoundException {
-        try {
-            return Class.forName(name, initialize, internals.getTransformingClassLoader());
-        } catch (Throwable ex) {
-            return Class.forName(name, initialize, ModLauncherClassProvider.class.getClassLoader());
-        }
+        return Class.forName(name, initialize, getUsableClassLoader());
     }
 
     /* (non-Javadoc)
@@ -83,10 +88,6 @@ class ModLauncherClassProvider implements IClassProvider {
      */
     @Override
     public Class<?> findAgentClass(String name, boolean initialize) throws ClassNotFoundException {
-        try {
-            return Class.forName(name, initialize, internals.getTransformingClassLoader());
-        } catch (Throwable ex) {
-            return Class.forName(name, initialize, ModLauncherClassProvider.class.getClassLoader());
-        }
+        return findClass(name, initialize);
     }
 }

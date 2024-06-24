@@ -25,13 +25,13 @@
 package org.spongepowered.asm.launch.platform;
 
 import java.lang.reflect.Method;
-import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableSet;
+import net.minecraftforge.fml.loading.LoadingModList;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleURI;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleVirtual;
 import org.spongepowered.asm.launch.platform.container.IContainerHandle;
@@ -46,20 +46,6 @@ import cpw.mods.modlauncher.api.ILaunchHandlerService;
  * Platform agent for minecraft forge under ModLauncher, only detects the side
  */
 public class MixinPlatformAgentMinecraftForge extends MixinPlatformAgentAbstract implements IMixinPlatformServiceAgent {
-
-    private static final String FML_LOADING_PACKAGE = "net.minecraftforge.fml.loading.";
-    private static final String FML_DISCOVERY_PACKAGE = MixinPlatformAgentMinecraftForge.FML_LOADING_PACKAGE + "moddiscovery.";
-
-    private static final String LAUNCHER_VERSION_CLASS = MixinPlatformAgentMinecraftForge.FML_LOADING_PACKAGE + "LauncherVersion";
-    private static final String LOADING_MOD_LIST_CLASS = MixinPlatformAgentMinecraftForge.FML_LOADING_PACKAGE + "LoadingModList";
-    private static final String MOD_FILE_INFO_CLASS = MixinPlatformAgentMinecraftForge.FML_DISCOVERY_PACKAGE + "ModFileInfo";
-    private static final String MOD_FILE_CLASS = MixinPlatformAgentMinecraftForge.FML_DISCOVERY_PACKAGE + "ModFile";
-
-    private static final String GET_MOD_LIST_METHOD = "get";
-    private static final String GET_MOD_FILES_METHOD = "getModFiles";
-    private static final String GET_MOD_FILE_METHOD = "getFile";
-    private static final String GET_FILE_PATH_METHOD = "getFilePath";
-
     private ContainerHandleVirtual rootContainer;
 
     /**
@@ -74,47 +60,14 @@ public class MixinPlatformAgentMinecraftForge extends MixinPlatformAgentAbstract
     @Override
     public void init() {
         try {
-            Class.forName(MixinPlatformAgentMinecraftForge.LAUNCHER_VERSION_CLASS);
+            Class.forName("net.minecraftforge.fml.loading.LauncherVersion");
         } catch (Exception ex) {
             MixinPlatformAgentAbstract.logger.debug("FML Launcher Version class was not found, assuming FML is not present");
             return;
         }
 
-        String activity = "Initialising FML containers";
-        try {
-            // Normally I'd cache these reflection objects, but this should only get called once
-            activity = "Resolving FML LoadingModList class";
-            Class<?> clModList = Class.forName(MixinPlatformAgentMinecraftForge.LOADING_MOD_LIST_CLASS);
-            activity = "Resolving FML ModFileInfo class";
-            Class<?> clModFileInfo = Class.forName(MixinPlatformAgentMinecraftForge.MOD_FILE_INFO_CLASS);
-            activity = "Resolving FML ModFile class";
-            Class<?> clModFile = Class.forName(MixinPlatformAgentMinecraftForge.MOD_FILE_CLASS);
-
-            activity = "Resolving FML LoadingModList::get method";
-            Method mdGetModListInstance = clModList.getDeclaredMethod(MixinPlatformAgentMinecraftForge.GET_MOD_LIST_METHOD);
-            activity = "Resolving FML LoadingModList::getModFiles method";
-            Method mdGetModFiles = clModList.getDeclaredMethod(MixinPlatformAgentMinecraftForge.GET_MOD_FILES_METHOD);
-            activity = "Resolving FML ModFileInfo::getFile method";
-            Method mdGetModFile = clModFileInfo.getDeclaredMethod(MixinPlatformAgentMinecraftForge.GET_MOD_FILE_METHOD);
-            activity = "Resolving FML ModFile::getFilePath method";
-            Method mdGetFilePath = clModFile.getDeclaredMethod(MixinPlatformAgentMinecraftForge.GET_FILE_PATH_METHOD);
-
-            activity = "Calling FML LoadingModList::get method to obtain LoadingModList singleton";
-            Object loadingModList = mdGetModListInstance.invoke(null);
-            activity = "Calling FML LoadingModList::getModFiles method to obtain list of mod candidates";
-            List<?> modlist = (List<?>)mdGetModFiles.invoke(loadingModList);
-            for (Object modFileInfo : modlist) {
-                activity = "Calling ModFileInfo::getFile method to obtain mod file info";
-                Object modFile = mdGetModFile.invoke(modFileInfo);
-                activity = "Calling ModFile::getFilePath method to obtain mod file location";
-                Path path = (Path)mdGetFilePath.invoke(modFile);
-                activity = "Creating ContainerHandleURI instance to contain FML mod: " + path;
-                this.rootContainer.add(new ContainerHandleURI(path.toUri()));
-            }
-
-        } catch (Exception ex) {
-            MixinPlatformAgentAbstract.logger.error("Error reading FML mod list contents during activity: {}", activity);
-            MixinPlatformAgentAbstract.logger.catching(ex);
+        for (ModFileInfo modFileInfo : LoadingModList.get().getModFiles()) {
+            this.rootContainer.add(new ContainerHandleURI(modFileInfo.getFile().getFilePath().toUri()));
         }
     }
 

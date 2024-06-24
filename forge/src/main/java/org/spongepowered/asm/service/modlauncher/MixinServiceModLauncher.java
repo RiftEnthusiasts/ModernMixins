@@ -28,10 +28,8 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 
-import cpw.mods.modlauncher.TransformingClassLoader;
 import org.spongepowered.asm.launch.IClassProcessor;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleModLauncher;
-import org.spongepowered.asm.launch.platform.container.IContainerHandle;
 import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
@@ -259,17 +257,7 @@ public class MixinServiceModLauncher extends MixinServiceAbstract {
      */
     @Override
     public InputStream getResourceAsStream(String name) {
-        TransformingClassLoader tcl = Internals.getInstance().getTransformingClassLoader();
-        if (tcl != null) {
-            InputStream is = tcl.getResourceAsStream(name);
-
-            if (is != null) {
-                return is;
-            }
-        }
-
-        // Probably not what we want :/
-        return MixinServiceModLauncher.class.getClassLoader().getResourceAsStream(name);
+        return ModLauncherClassProvider.getUsableClassLoader().getResourceAsStream(name);
     }
 
     /**
